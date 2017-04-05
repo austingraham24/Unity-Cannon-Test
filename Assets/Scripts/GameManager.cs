@@ -30,9 +30,10 @@ public class GameManager : MonoBehaviour {
     private int maxFramePower = 350;
     // the initial & current rotation of the cannonBody
     private float currentRotation = 75.0f;
-
-    public float maxAimAngle; //ex: 45
-    public float minAimAngle; // ex: 90
+    //make sure you get these in the correct order! Otherwise you will have unexpected behavior (or none at all).
+    //also make sure your current rotation is within this range so it does not snap to the min or max angle upon user input
+    private float minAimAngle = 45; // ex: 45
+    private float maxAimAngle = 90; //ex: 90
 
 	// Use this for initialization
 	void Start () {
@@ -43,30 +44,6 @@ public class GameManager : MonoBehaviour {
 	void Update () {
 
 		handleUserInut();
-
-        if (Input.GetKey(KeyCode.Space)) {
-            //make sure missile has not been launched 
-            if (!hasFired) {
-                framesHeld++;
-                float progressDecimal = ((float)framesHeld/(float)maxFramePower);
-                int progressPercent = (int)(progressDecimal * 100f);
-                powerBar.fillAmount = progressDecimal;
-                powerProgress.text=(progressPercent.ToString()+"%");
-                if(framesHeld>maxFramePower) {
-                	framesHeld = maxFramePower;
-                    hasFired = true;
-                	FireUpAndOver(framesHeld);
-                }
-            }
-
-        }
-        else {
-            if(framesHeld > 0 && !hasFired) {
-                //FIRE ZE MISSILES!
-                hasFired = true;
-                FireUpAndOver(framesHeld);
-            }
-        }
 
     }
 
