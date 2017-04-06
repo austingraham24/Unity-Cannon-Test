@@ -4,13 +4,12 @@ using UnityEngine;
 
 public class Projectile : MonoBehaviour {
 
-	//where does the object spanw and respawn at
-	private Vector3 spawnPoint;
+	//life span of this projectile in seconds
+	private int maxLife = 10;
 
 	// Use this for initialization
 	void Start () {
-		spawnPoint = transform.position;
-		print(spawnPoint);
+		StartCoroutine("calculateDeath");
 	}
 	
 	// Update is called once per frame
@@ -18,7 +17,12 @@ public class Projectile : MonoBehaviour {
 		
 	}
 
-	public void respawn(){
-		transform.position = spawnPoint;
+	public void destroySelf(){
+		Destroy(gameObject);
 	}
+
+	IEnumerator calculateDeath() {
+        yield return new WaitForSeconds(maxLife);
+        destroySelf();
+    }
 }
