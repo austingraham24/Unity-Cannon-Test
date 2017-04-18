@@ -19,6 +19,10 @@ public class GameManager : MonoBehaviour {
 	[SerializeField] private int moveSpeed;
 	//speed multiplier to aim cannon
 	[SerializeField] private int rotateSpeed;
+    //the cannon game object NOTE: this is the entire canon object and not just the body
+    [SerializeField] private GameObject enemyCannon1;
+    //the cannon game object NOTE: this is the entire canon object and not just the body
+    [SerializeField] private GameObject enemyCannon2;
 
 	//the body of then cannon to be rotated and aimed; set on start
 	private GameObject cannonBody;
@@ -44,6 +48,10 @@ public class GameManager : MonoBehaviour {
     private float maxAimAngle = 90; //ex: 90
     //# of shots allowed
     private int numShots = 3;
+    //used to alternate enemy cannon fire
+    private int enemyAlternator = 0;
+    // s enemy firing
+    private bool enemyFiring = false;
 
 	// Use this for initialization
 	void Start () {
@@ -61,9 +69,15 @@ public class GameManager : MonoBehaviour {
     private void handleUserInut(){
     	handleArrowInput();
 
-    	if(numShots != 0){
+        if(!enemyFiring){
+            StartCoroutine(handleEnemyShot());
+        }
+
+        aimEnemies();
+
+    	if(numShots != null){
     		if (Input.GetKey(KeyCode.Space)) {
-    		handleSpaceInput();
+    		  handleSpaceInput();
 	    	}else{ //meaning I have let go of spacebar
 	    		if(framesHeld > 0 && !hasFired) {
 	                //FIRE ZE MISSILES!
@@ -72,6 +86,39 @@ public class GameManager : MonoBehaviour {
 	            }
 	    	}
     	}
+    }
+
+    private void aimEnemies(){
+        float dampen = 5f;
+        GameObject player = cannon;
+        //rotate enemy 1
+        Vector3 newEnemy1Location = player.transform.position - enemyCannon1.transform.position;
+        newEnemy1Location.y = 0;
+
+        Quaternion newEnemy1Rotation = Quaternion.LookRotation(newEnemy1Location);
+        enemyCannon1.transform.rotation = Quaternion.Slerp(enemyCannon1.transform.rotation, newEnemy1Rotation, Time.deltaTime * dampen); 
+
+        //rotate enemy 2
+        Vector3 newEnemy2Location = player.transform.position - enemyCannon2.transform.position;
+        newEnemy2Location.y = 0;
+
+        Quaternion newEnemy2Rotation = Quaternion.LookRotation(newEnemy2Location);
+        enemyCannon2.transform.rotation = Quaternion.Slerp(enemyCannon2.transform.rotation, newEnemy2Rotation, Time.deltaTime * dampen); 
+}
+
+    private void fireEnemyCannon(){
+        GameObject currentEnemy;
+        if(enemyAlternator == 0){
+            enemyAlternator = 1;
+            currentEnemy = enemyCannon1.transform.GetChild(0).gameObject;
+        }else{
+            enemyAlternator = 0;
+            currentEnemy = enemyCannon2.transform.GetChild(0).gameObject;
+        }
+        GameObject enemySpawnPoint = currentEnemy.transform.GetChild(0).gameObject;
+        GameObject enemyShot = Instantiate(cannonBallPrefab, enemySpawnPoint.transform.position, Quaternion.identity);
+        enemyShot.GetComponent<Rigidbody>().AddForce(currentEnemy.transform.up * 250 * 5);
+        enemyShot.GetComponent<Rigidbody>().useGravity = true;
     }
 
     private void handleArrowInput(){
@@ -121,6 +168,18 @@ public class GameManager : MonoBehaviour {
         cannonBall.GetComponent<Rigidbody>().useGravity = true;
         numShots -= 1;
         StartCoroutine(powerDown());
+    }
+
+    IEnumerator handleEnemyShot() {
+        float enemyFire = Random.Range(0f, 1f);
+        //print(enemyFire);
+        if(enemyFire>.95f){
+            enemyFiring = true;
+            fireEnemyCannon();
+            yield return new WaitForSeconds(5f);
+
+        }
+        enemyFiring = false;
     }
 
     IEnumerator powerDown() {
